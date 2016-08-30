@@ -1,0 +1,7 @@
+base:
+    '*':
+        - elife
+        - elife.nginx
+        - elife.php7
+        - elife.nodejs6
+        - pattern-library

@@ -1,0 +1,4 @@
+base:
+    '*':
+        - elife
+        - pattern-library
