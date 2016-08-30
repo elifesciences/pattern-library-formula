@@ -90,6 +90,14 @@ pattern-library-dependencies:
         - require:
             - run-gulp
 
+pattern-library-generic-static-website:
+    cmd.run:
+        - name: php ./core/builder.php -g
+        - cwd: /srv/pattern-library
+        - user: {{ pillar.elife.deploy_user.username }}
+        - require:
+            - pattern-library-dependencies
+
 pattern-library-nginx-vhost:
     file.managed:
         - name: /etc/nginx/sites-enabled/pattern-library.conf
@@ -97,5 +105,6 @@ pattern-library-nginx-vhost:
         - template: jinja
         - require:
             - nginx-config
+            - pattern-library-generic-static-website
         - listen_in:
             - service: nginx-server-service
