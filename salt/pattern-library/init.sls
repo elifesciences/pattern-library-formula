@@ -95,6 +95,7 @@ pattern-library-generic-static-website:
         - user: {{ pillar.elife.deploy_user.username }}
         - require:
             - pattern-library-dependencies
+            - composer-install
 
 pattern-library-nginx-vhost:
     file.managed:
