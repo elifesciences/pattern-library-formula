@@ -38,11 +38,9 @@ npm-install:
 
 composer-install:
     cmd.run:
-        {% if pillar.elife.env in ['prod', 'ci', 'end2end'] %}
-        - name: composer --no-interaction install --no-dev
-        {% else %}
+        # to avoid surprise in production, we install the same dependencies
+        # everywhere; don't use --no-dev
         - name: composer --no-interaction install
-        {% endif %}
         - cwd: /srv/pattern-library/
         - user: {{ pillar.elife.deploy_user.username }}
         - require:
