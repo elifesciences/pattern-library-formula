@@ -28,12 +28,20 @@ pattern-library-public-directory:
         - require:
             - pattern-library-repository
 
+pattern-library-deb-dependencies:
+    pkg.installed:
+        - pkgs:
+            - make
+            - ruby-dev
+            - g++
+
 npm-install:
     cmd.run:
         - name: npm install
         - cwd: /srv/pattern-library/
         - user: {{ pillar.elife.deploy_user.username }}
         - require:
+            - pattern-library-deb-dependencies
             - pattern-library-repository
 
 composer-install:
@@ -47,18 +55,12 @@ composer-install:
             - install-composer
             - pattern-library-repository
 
-make:
-    pkg.installed
-
-ruby-dev:
-    pkg.installed
         
 pattern-library-compass:
     gem.installed:
         - name: compass
         - require:
-            - pkg: ruby-dev
-            - pkg: make
+            - pattern-library-deb-dependencies
 
 install-gulp:
     npm.installed:
@@ -80,7 +82,7 @@ run-gulp:
             - install-gulp
             - npm-install
 
-pattern-library-dependencies:
+pattern-library-public-folder-contents-dependencies:
     cmd.run:
         - name: cp -r ./core/styleguide ./public/
         - cwd: /srv/pattern-library
@@ -94,7 +96,7 @@ pattern-library-generic-static-website:
         - cwd: /srv/pattern-library
         - user: {{ pillar.elife.deploy_user.username }}
         - require:
-            - pattern-library-dependencies
+            - pattern-library-public-folder-contents-dependencies
             - composer-install
 
 pattern-library-nginx-vhost:
