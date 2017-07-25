@@ -3,5 +3,6 @@ base:
         - elife
         - elife.nginx
         - elife.php7
+        - elife.composer
         - elife.nodejs6
         - pattern-library
