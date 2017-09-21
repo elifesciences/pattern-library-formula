@@ -6,3 +6,6 @@ base:
         - elife.composer
         - elife.nodejs6
         - pattern-library
+        # only on dev, ci
+        - elife.java
+        - elife.selenium
