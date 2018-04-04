@@ -1,0 +1,8 @@
+version: '3'
+
+services:
+    ui:
+        image: "elifesciences/pattern-library:${IMAGE_TAG}"
+        ports:
+            - 8889:80
+        restart: always

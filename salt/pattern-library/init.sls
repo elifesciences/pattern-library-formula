@@ -1,103 +1,121 @@
-pattern-library-repository:
-    builder.git_latest:
-        - name: git@github.com:elifesciences/pattern-library.git
-        - identity: {{ pillar.elife.projects_builder.key or '' }}
-        - rev: {{ salt['elife.rev']() }}
-        - branch: {{ salt['elife.branch']() }}
-        - target: /srv/pattern-library/
-        - force_fetch: True
-        - force_checkout: True
-        - force_reset: True
-        - fetch_pull_requests: True
-
+pattern-library-docker-compose-folder:
     file.directory:
-        - name: /srv/pattern-library
-        - user: {{ pillar.elife.deploy_user.username }}
-        - group: {{ pillar.elife.deploy_user.username }}
-        - recurse:
-            - user
-            - group
-        - require:
-            - builder: pattern-library-repository
-
-pattern-library-public-directory:
-    file.directory:
-        - name: /srv/pattern-library
+        - name: /home/{{ pillar.elife.deploy_user.username }}/pattern-library/
         - user: {{ pillar.elife.deploy_user.username }}
         - group: {{ pillar.elife.deploy_user.username }}
         - require:
-            - pattern-library-repository
+            - deploy-user
 
-pattern-library-deb-dependencies:
-    pkg.installed:
-        - pkgs:
-            - make
-            - ruby-dev
-            - g++
+pattern-library-docker-compose-.env:
+    file.managed:
+        - name: /home/{{ pillar.elife.deploy_user.username }}/pattern-library/.env
+        - source: salt://pattern-library/config/home-deployuser-pattern-library-.env
+        - makedirs: True
+        - template: jinja
+        - require:
+            - pattern-library-docker-compose-folder
 
-npm-install:
+pattern-library-docker-compose-yml:
+    file.managed:
+        - name: /home/{{ pillar.elife.deploy_user.username }}/pattern-library/docker-compose.yml
+        - source: salt://pattern-library/config/home-deployuser-pattern-library-docker-compose.yml
+        - template: jinja
+        - require:
+            - pattern-library-docker-compose-folder
+
+pattern-library-docker-containers:
     cmd.run:
-        - name: npm install
-        - cwd: /srv/pattern-library/
+        - name: |
+            /usr/local/bin/docker-compose up --force-recreate -d
         - user: {{ pillar.elife.deploy_user.username }}
+        - cwd: /home/{{ pillar.elife.deploy_user.username }}/pattern-library
         - require:
-            - pattern-library-deb-dependencies
-            - pattern-library-repository
+            - pattern-library-docker-compose-.env
+            - pattern-library-docker-compose-yml
 
-composer-install:
-    cmd.run:
-        # to avoid surprise in production, we install the same dependencies
-        # everywhere; don't use --no-dev
-        - name: composer --no-interaction install
-        - cwd: /srv/pattern-library/
-        - user: {{ pillar.elife.deploy_user.username }}
-        - require:
-            - install-composer
-            - pattern-library-repository
 
-        
-pattern-library-compass:
-    gem.installed:
-        - name: compass
-        - require:
-            - pattern-library-deb-dependencies
 
-install-gulp:
-    npm.installed:
-        - name: gulp-cli
-        - require:
-            - pkg: nodejs
-            - pattern-library-compass
 
-run-gulp:
-    cmd.run:
-        {% if pillar.elife.env in ['prod', 'ci'] %}
-        - name: gulp --environment production
-        {% else %}
-        - name: gulp
-        {% endif %}
-        - cwd: /srv/pattern-library/
-        - user: {{ pillar.elife.deploy_user.username }}
-        - require:
-            - install-gulp
-            - npm-install
 
-pattern-library-public-folder-contents-dependencies:
-    cmd.run:
-        - name: cp -r ./core/styleguide ./public/
-        - cwd: /srv/pattern-library
-        - user: {{ pillar.elife.deploy_user.username }}
-        - require:
-            - run-gulp
 
-pattern-library-generic-static-website:
-    cmd.run:
-        - name: php ./core/builder.php -g
-        - cwd: /srv/pattern-library
-        - user: {{ pillar.elife.deploy_user.username }}
-        - require:
-            - pattern-library-public-folder-contents-dependencies
-            - composer-install
+#pattern-library-public-directory:
+#    file.directory:
+#        - name: /srv/pattern-library
+#        - user: {{ pillar.elife.deploy_user.username }}
+#        - group: {{ pillar.elife.deploy_user.username }}
+#        - require:
+#            - pattern-library-repository
+#
+#pattern-library-deb-dependencies:
+#    pkg.installed:
+#        - pkgs:
+#            - make
+#            - ruby-dev
+#            - g++
+#
+#npm-install:
+#    cmd.run:
+#        - name: npm install
+#        - cwd: /srv/pattern-library/
+#        - user: {{ pillar.elife.deploy_user.username }}
+#        - require:
+#            - pattern-library-deb-dependencies
+#            - pattern-library-repository
+#
+#composer-install:
+#    cmd.run:
+#        # to avoid surprise in production, we install the same dependencies
+#        # everywhere; don't use --no-dev
+#        - name: composer --no-interaction install
+#        - cwd: /srv/pattern-library/
+#        - user: {{ pillar.elife.deploy_user.username }}
+#        - require:
+#            - install-composer
+#            - pattern-library-repository
+#
+#        
+#pattern-library-compass:
+#    gem.installed:
+#        - name: compass
+#        - require:
+#            - pattern-library-deb-dependencies
+#
+#install-gulp:
+#    npm.installed:
+#        - name: gulp-cli
+#        - require:
+#            - pkg: nodejs
+#            - pattern-library-compass
+#
+#run-gulp:
+#    cmd.run:
+#        {% if pillar.elife.env in ['prod', 'ci'] %}
+#        - name: gulp --environment production
+#        {% else %}
+#        - name: gulp
+#        {% endif %}
+#        - cwd: /srv/pattern-library/
+#        - user: {{ pillar.elife.deploy_user.username }}
+#        - require:
+#            - install-gulp
+#            - npm-install
+#
+#pattern-library-public-folder-contents-dependencies:
+#    cmd.run:
+#        - name: cp -r ./core/styleguide ./public/
+#        - cwd: /srv/pattern-library
+#        - user: {{ pillar.elife.deploy_user.username }}
+#        - require:
+#            - run-gulp
+#
+#pattern-library-generic-static-website:
+#    cmd.run:
+#        - name: php ./core/builder.php -g
+#        - cwd: /srv/pattern-library
+#        - user: {{ pillar.elife.deploy_user.username }}
+#        - require:
+#            - pattern-library-public-folder-contents-dependencies
+#            - composer-install
 
 pattern-library-nginx-vhost:
     file.managed:
@@ -106,6 +124,6 @@ pattern-library-nginx-vhost:
         - template: jinja
         - require:
             - nginx-config
-            - pattern-library-generic-static-website
+            - pattern-library-docker-containers
         - listen_in:
             - service: nginx-server-service
