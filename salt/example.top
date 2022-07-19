@@ -1,6 +1,6 @@
 base:
     '*':
         - elife
-        - elife.docker
+        - elife.docker-native
         - elife.nginx
         - pattern-library
