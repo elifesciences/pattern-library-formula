@@ -43,7 +43,22 @@ pattern-library-smoke-tests:
         - require:
             - pattern-library-docker-compose-folder
 
-pattern-library-nginx-vhost:
+{% if pillar.elife.webserver.app == "caddy" %}
+pattern-library-vhost:
+    file.managed:
+        - name: /etc/caddy/sites.d/pattern-library
+        - source: salt://pattern-library/config/etc-caddy-sites.d-pattern-library
+        - template: jinja
+        - require:
+            - caddy-config
+            - pattern-library-docker-containers
+        - require_in:
+            - validate-caddy-config
+        - listen_in:
+            - service: caddy-server-service
+
+{% else %}
+pattern-library-vhost:
     file.managed:
         - name: /etc/nginx/sites-enabled/pattern-library.conf
         - source: salt://pattern-library/config/etc-nginx-sites-enabled-pattern-library.conf
@@ -53,3 +68,4 @@ pattern-library-nginx-vhost:
             - pattern-library-docker-containers
         - listen_in:
             - service: nginx-server-service
+{% endif %}
