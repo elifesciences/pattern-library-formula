@@ -1,1 +1,1 @@
-elifeFormula('pattern-library', '/home/elife/pattern-library')
+elifeFormula('pattern-library', '/home/elife/pattern-library', null, ['snsalt'])
